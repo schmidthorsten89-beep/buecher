@@ -1,7 +1,7 @@
 'use strict';
 
 // Bei jeder Änderung an den App-Dateien erhöhen, damit die Handys die neue Version laden.
-const CACHE = 'buecher-v3';
+const CACHE = 'buecher-v4';
 // Cover (Google, Open Library, Amazon und eingefügte Bildadressen) bleiben über App-Updates hinweg erhalten.
 const COVER_CACHE = 'buecher-cover';
 const DATEIEN = [

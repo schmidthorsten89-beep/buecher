@@ -1235,10 +1235,124 @@ function exportiereCsv() {
   ladeHerunter(`﻿${zeilen.join('\r\n')}`, 'text/csv;charset=utf-8', `buecher-${heuteIso()}.csv`);
 }
 
+/* ---------- Übernahme aus Bookie (CSV-Export) ---------- */
+
+const BOOKIE_STATUS = { currently_reading: 'lese', finished: 'gelesen', want_to_read: 'wunsch', wishlist: 'wunsch' };
+
+function leseCsv(text) {
+  const zeilen = [];
+  let zeile = [];
+  let feld = '';
+  let inAnfuehrung = false;
+  for (let i = 0; i < text.length; i += 1) {
+    const z = text[i];
+    if (inAnfuehrung) {
+      if (z === '"' && text[i + 1] === '"') { feld += '"'; i += 1; } else if (z === '"') inAnfuehrung = false; else feld += z;
+    } else if (z === '"') inAnfuehrung = true;
+    else if (z === ',') { zeile.push(feld); feld = ''; } else if (z === '\n' || z === '\r') {
+      if (z === '\r' && text[i + 1] === '\n') i += 1;
+      zeile.push(feld); feld = '';
+      if (zeile.some((f) => f.trim())) zeilen.push(zeile);
+      zeile = [];
+    } else feld += z;
+  }
+  zeile.push(feld);
+  if (zeile.some((f) => f.trim())) zeilen.push(zeile);
+  return zeilen;
+}
+
+// Bookie schreibt „Nachname, Vorname, Nachname, Vorname" oder „Vorname Nachname, Vorname Nachname".
+function bookieAutoren(text) {
+  const teile = text.split(',').map((t) => t.replace(/\s+/g, ' ').trim()).filter(Boolean);
+  const paarweise = teile.length % 2 === 0 && teile.every((t, i) => i % 2 === 1 || !t.includes(' '));
+  const namen = paarweise
+    ? teile.flatMap((t, i) => (i % 2 === 0 ? [`${teile[i + 1]} ${t}`] : []))
+    : teile;
+  const schoen = namen.map((n) => n.replace(/\b([A-ZÄÖÜ])([A-ZÄÖÜ]{2,})\b/g, (_, a, b) => a + b.toLowerCase()));
+  return [...new Set(schoen)].join(', ');
+}
+
+function isbn10Aus13(isbn) {
+  if (!/^978\d{10}$/.test(isbn)) return '';
+  const kern = isbn.slice(3, 12);
+  const summe = [...kern].reduce((s, z, i) => s + (10 - i) * Number(z), 0);
+  const pruef = (11 - (summe % 11)) % 11;
+  return kern + (pruef === 10 ? 'X' : String(pruef));
+}
+
+function bookieDatum(wert) {
+  const m = /^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2})/.exec(wert || '');
+  return m ? { tag: m[1], zeit: new Date(`${m[1]}T${m[2]}`).getTime() } : null;
+}
+
+function importiereBookie(text) {
+  const [kopf, ...zeilen] = leseCsv(text.replace(/^﻿/, ''));
+  const spalte = Object.fromEntries((kopf || []).map((name, i) => [name.trim(), i]));
+  if (!('title' in spalte) || !('list_name' in spalte)) return null;
+  const wert = (zeile, name) => (spalte[name] === undefined ? '' : (zeile[spalte[name]] || '').trim());
+
+  // Viele „finished"-Einträge am selben Tag = nachgetragene Bücher, deren echtes Lesedatum unbekannt ist.
+  const proTag = {};
+  zeilen.forEach((z) => {
+    const d = bookieDatum(wert(z, 'entry_created_at'));
+    if (d && wert(z, 'list_name') === 'finished') proTag[d.tag] = (proTag[d.tag] || 0) + 1;
+  });
+
+  let neu = 0;
+  let vorhanden = 0;
+  zeilen.forEach((z) => {
+    const titel = wert(z, 'title')
+      .replace(/:?\s*\((German|English|Deutsche?) Edition\)/gi, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (!titel) return;
+    const kennung = wert(z, 'isbn').toUpperCase();
+    const asin = /^B0[A-Z0-9]{8}$/.test(kennung) ? kennung : '';
+    const isbn = asin ? '' : normIsbn(kennung);
+    const autor = bookieAutoren(wert(z, 'contributors'));
+    const name = `${titel}|${autor}`.toLocaleLowerCase('de');
+    const doppelt = zustand.buecher.some((b) => (isbn || asin
+      ? (isbn && b.isbn === isbn) || (asin && b.asin === asin)
+      : `${b.titel}|${b.autor}`.toLocaleLowerCase('de') === name));
+    if (doppelt) { vorhanden += 1; return; }
+
+    const status = BOOKIE_STATUS[wert(z, 'list_name')] || 'wunsch';
+    const datum = bookieDatum(wert(z, 'entry_created_at'));
+    const isbn10 = isbn10Aus13(isbn);
+    const cover = asin ? amazonCover(asin)
+      : isbn10 ? amazonCover(isbn10)
+        : isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg?default=false` : '';
+    const buch = bereinigeBuch({
+      titel, autor, isbn, asin, cover, status,
+      format: asin ? 'ebook' : 'buch',
+      start: status === 'lese' && datum ? datum.tag : '',
+      ende: status === 'gelesen' && datum && proTag[datum.tag] < 5 ? datum.tag : '',
+      hinzugefuegt: datum ? datum.zeit : Date.now(),
+    });
+    if (!buch) return;
+    zustand.buecher.push(buch);
+    neu += 1;
+  });
+  return { neu, vorhanden };
+}
+
 async function importiere(datei) {
   let daten;
+  const text = await datei.text();
+  if (/\.csv$/i.test(datei.name) || /^﻿?isbn,title,/.test(text)) {
+    const ergebnis = importiereBookie(text);
+    if (!ergebnis) {
+      zeigeStatus('Diese CSV-Datei stammt nicht aus Bookie.');
+      return;
+    }
+    speichere();
+    $('#dlg-einstellungen').close();
+    render();
+    zeigeStatus(`${mehrzahl(ergebnis.neu, 'Buch', 'Bücher')} aus Bookie übernommen${ergebnis.vorhanden ? `, ${ergebnis.vorhanden} ${ergebnis.vorhanden === 1 ? 'war' : 'waren'} schon da` : ''}.`);
+    return;
+  }
   try {
-    daten = JSON.parse(await datei.text());
+    daten = JSON.parse(text);
   } catch (fehler) {
     zeigeStatus('Die Datei konnte nicht gelesen werden.');
     return;
