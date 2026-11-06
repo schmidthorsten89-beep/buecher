@@ -1,0 +1,581 @@
+:root {
+  color-scheme: light dark;
+  --grund: #f1f6f2;
+  --flaeche: #ffffff;
+  --text: #1a2a20;
+  --leise: #557062;
+  --rand: #d3e3d8;
+  --marke: #2f6b4f;
+  --auf-marke: #ffffff;
+  --marke-zart: #dcebe1;
+  --kopf: #2f6b4f;
+  --stern: #d89a00;
+  --stern-leer: #d3e3d8;
+  --gefahr-text: #b91c1c;
+  --gut: #1f7a3f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --grund: #0e1712;
+    --flaeche: #16231b;
+    --text: #e3efe7;
+    --leise: #9db8a8;
+    --rand: #2a3e32;
+    --marke: #7ccb9c;
+    --auf-marke: #0a2215;
+    --marke-zart: #1e3428;
+    --kopf: #1f4a35;
+    --stern: #f5c242;
+    --stern-leer: #3d5547;
+    --gefahr-text: #fca5a5;
+    --gut: #8fdcab;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--grund);
+  color: var(--text);
+  font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+[hidden] { display: none !important; }
+
+button, input, select, textarea { font: inherit; color: inherit; }
+
+button {
+  min-height: 44px;
+  padding: 8px 14px;
+  background: var(--flaeche);
+  border: 1px solid var(--rand);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+input[type="search"] {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+  background: var(--flaeche);
+  border: 1px solid var(--rand);
+  border-radius: 8px;
+}
+
+label { display: block; margin-bottom: 10px; color: var(--leise); font-size: 13px; }
+
+label input, label select, dialog textarea {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 2px;
+  padding: 8px 10px;
+  background: var(--flaeche);
+  border: 1px solid var(--rand);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 16px;
+}
+
+dialog textarea { resize: vertical; }
+
+.zeile { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+label input { min-width: 0; }
+.symbol-knopf { width: 44px; padding: 0; font-size: 20px; }
+.breit { width: 100%; margin: 8px 0 4px; }
+.fehler { margin: 10px 0 0; color: var(--gefahr-text); font-size: 14px; }
+.hinweis { margin: 0 0 8px; color: var(--leise); font-size: 14px; }
+.feld-titel { margin: 8px 0 4px; color: var(--leise); font-size: 13px; }
+.platz { flex: 1; }
+.haupt { background: var(--marke); border-color: var(--marke); color: var(--auf-marke); }
+.gefahr { color: var(--gefahr-text); }
+.leer { padding: 32px 0; color: var(--leise); text-align: center; }
+.leer button { margin-top: 12px; }
+
+:focus-visible { outline: 2px solid var(--marke); outline-offset: 2px; }
+
+/* ---------- Kopf, Status, Navigation ---------- */
+
+.kopf {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  padding-top: calc(8px + env(safe-area-inset-top));
+  background: var(--kopf);
+  color: #ffffff;
+}
+
+.kopf h1 { flex: 1; margin: 0; font-size: 20px; }
+
+.kopf-knopf {
+  width: 44px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font-size: 22px;
+}
+
+.kopf-knopf:focus-visible { outline-color: #ffffff; outline-offset: -4px; }
+
+.status {
+  position: fixed;
+  right: 16px;
+  bottom: calc(144px + env(safe-area-inset-bottom));
+  left: 16px;
+  z-index: 3;
+  max-width: 688px;
+  margin: 0 auto;
+  padding: 10px 14px;
+  background: var(--text);
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, .3);
+  color: var(--grund);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 12px 16px calc(150px + env(safe-area-inset-bottom));
+}
+
+.navi {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--flaeche);
+  border-top: 1px solid var(--rand);
+}
+
+.navi button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: 60px;
+  padding: 6px 4px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  color: var(--leise);
+  font-size: 12px;
+}
+
+.navi button span { font-size: 22px; line-height: 1; }
+.navi .aktiv { color: var(--marke); font-weight: 600; box-shadow: inset 0 3px 0 var(--marke); }
+
+.neu-knopf {
+  position: fixed;
+  right: max(16px, calc(50vw - 344px));
+  bottom: calc(76px + env(safe-area-inset-bottom));
+  z-index: 2;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  background: var(--marke);
+  border: 0;
+  border-radius: 16px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, .3);
+  color: var(--auf-marke);
+  font-size: 32px;
+  line-height: 1;
+}
+
+/* ---------- Cover ---------- */
+
+.cover {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  aspect-ratio: 2 / 3;
+  padding: 4px;
+  overflow: hidden;
+  /* Platzhalter-Cover in Grün- bis Blaugrüntönen, je Titel verschieden */
+  background: hsl(calc(85 + var(--farbton, 180) / 3.4) 32% calc(30% + var(--farbton, 180) / 36 * 1%));
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .25);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.cover .cover-text { display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+.cover.klein { width: 48px; font-size: 8px; }
+.cover.gross { width: 108px; font-size: 13px; }
+
+/* ---------- Sterne ---------- */
+
+.sterne {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  width: max-content;
+  color: var(--stern-leer);
+  font-size: 14px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.sterne::before { content: "★★★★★"; }
+
+.sterne::after {
+  content: "★★★★★";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--wert, 0%);
+  overflow: hidden;
+  color: var(--stern);
+}
+
+.sterne.waehlbar { padding: 4px 0; font-size: 40px; cursor: pointer; touch-action: manipulation; user-select: none; }
+.sterne.waehlbar::after { top: 4px; }
+.sterne-zeile { display: flex; align-items: center; gap: 12px; }
+.sterne-zahl { color: var(--leise); font-size: 14px; font-variant-numeric: tabular-nums; }
+
+/* ---------- Fortschritt ---------- */
+
+.balken { height: 6px; overflow: hidden; background: var(--marke-zart); border-radius: 3px; }
+.balken > span { display: block; width: var(--p, 0%); height: 100%; background: var(--marke); border-radius: 3px; }
+
+/* ---------- Lese ich ---------- */
+
+.ziel-kurz {
+  display: block;
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  text-align: left;
+  font-size: 14px;
+}
+
+.ziel-kurz .balken { margin-top: 6px; }
+.ziel-kurz strong { font-size: 15px; }
+
+.lese-karte {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding: 12px;
+  background: var(--flaeche);
+  border: 1px solid var(--rand);
+  border-radius: 12px;
+}
+
+.lese-karte .cover { cursor: pointer; }
+.lese-text { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.titel-knopf { min-height: 0; padding: 0; background: none; border: 0; text-align: left; }
+.buch-titel { display: block; font-size: 16px; font-weight: 600; }
+.buch-autor { display: block; margin-top: 2px; color: var(--leise); font-size: 14px; }
+.lese-stand { display: flex; justify-content: space-between; margin: 10px 0 4px; color: var(--leise); font-size: 13px; font-variant-numeric: tabular-nums; }
+.lese-knoepfe { display: flex; gap: 8px; margin-top: auto; padding-top: 10px; }
+.lese-knoepfe button { flex: 1; min-height: 40px; padding: 6px 8px; font-size: 14px; }
+
+.abschnitt-titel { margin: 22px 0 10px; color: var(--leise); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+
+.reihe {
+  display: flex;
+  gap: 12px;
+  margin: 0 -16px;
+  padding: 0 16px 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.reihe button { flex: none; width: 84px; min-height: 0; padding: 0; background: none; border: 0; text-align: left; }
+.reihe .cover { width: 84px; }
+.reihe .klein-titel { display: -webkit-box; margin-top: 6px; overflow: hidden; font-size: 12px; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+
+/* ---------- Bibliothek ---------- */
+
+.chips {
+  display: flex;
+  gap: 6px;
+  margin: 12px -16px;
+  padding: 0 16px 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.chips button {
+  flex: none;
+  min-height: 36px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 14px;
+}
+
+.chips .aktiv { background: var(--marke); border-color: var(--marke); color: var(--auf-marke); }
+.chips small { margin-left: 4px; opacity: .75; font-variant-numeric: tabular-nums; }
+
+.sortierung { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; color: var(--leise); font-size: 14px; }
+.sortierung label { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 14px; }
+.sortierung select { width: auto; min-height: 36px; margin: 0; padding: 4px 8px; font-size: 14px; }
+
+.regal {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 18px 12px;
+}
+
+.regal-buch {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  text-align: left;
+}
+
+.regal-buch .cover { width: 100%; font-size: 12px; }
+.regal-buch .klein-titel { display: -webkit-box; margin-top: 6px; overflow: hidden; overflow-wrap: anywhere; font-size: 13px; font-weight: 600; line-height: 1.25; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.regal-buch .klein-autor { display: block; overflow: hidden; color: var(--leise); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.regal-buch .sterne { margin-top: 3px; font-size: 12px; }
+
+.status-marke {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  left: 4px;
+  z-index: 1;
+  padding: 2px 4px;
+  background: rgba(0, 0, 0, .65);
+  border-radius: 4px;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* ---------- Statistik ---------- */
+
+.monat-kopf { display: flex; align-items: center; gap: 8px; }
+.monat-kopf h2 { flex: 1; margin: 0; font-size: 22px; text-align: center; font-variant-numeric: tabular-nums; }
+.pfeil { width: 48px; padding: 0; font-size: 24px; line-height: 1; }
+.pfeil:disabled { opacity: .35; cursor: default; }
+
+.karte {
+  margin-top: 12px;
+  padding: 14px;
+  background: var(--flaeche);
+  border: 1px solid var(--rand);
+  border-radius: 12px;
+}
+
+.karte h3 { margin: 0 0 10px; font-size: 15px; }
+
+.ziel-karte { display: flex; align-items: center; gap: 16px; }
+.ring { flex: none; width: 112px; height: 112px; }
+.ring-spur { fill: none; stroke: var(--marke-zart); stroke-width: 10; }
+.ring-wert { fill: none; stroke: var(--marke); stroke-width: 10; stroke-linecap: round; transform: rotate(-90deg); transform-origin: 50% 50%; }
+.ring-zahl { fill: var(--text); font-size: 26px; font-weight: 700; text-anchor: middle; font-variant-numeric: tabular-nums; }
+.ring-ziel { fill: var(--leise); font-size: 12px; text-anchor: middle; }
+.ziel-text strong { display: block; font-size: 17px; }
+.ziel-text span { display: block; margin-top: 4px; color: var(--leise); font-size: 14px; }
+.ziel-text .vorne { color: var(--gut); }
+
+.monate { position: relative; }
+.monate svg { display: block; width: 100%; height: auto; overflow: visible; }
+.monate .achse { stroke: var(--rand); stroke-width: 1; }
+.monate .gitter { stroke: var(--rand); stroke-width: 1; stroke-dasharray: 2 3; }
+.monate .saeule { fill: var(--marke); }
+.monate .saeule.jetzt { fill: var(--marke); }
+.monate .treffer-flaeche { fill: transparent; cursor: pointer; }
+.monate .treffer-flaeche:hover + .saeule, .monate .gewaehlt .saeule { opacity: .75; }
+.monate .beschriftung { fill: var(--leise); font-size: 11px; text-anchor: middle; }
+.monate .beschriftung.jetzt { fill: var(--text); font-weight: 700; }
+.monate .wert { fill: var(--text); font-size: 11px; font-weight: 600; text-anchor: middle; font-variant-numeric: tabular-nums; }
+.monat-info { min-height: 20px; margin: 8px 0 0; color: var(--leise); font-size: 13px; }
+
+.kacheln { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 12px; }
+.kachel { padding: 12px; background: var(--flaeche); border: 1px solid var(--rand); border-radius: 12px; }
+.kachel strong { display: block; font-size: 24px; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.kachel span { color: var(--leise); font-size: 13px; }
+
+.highlights { margin: 0; padding: 0; list-style: none; font-size: 14px; }
+.highlights li { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--rand); }
+.highlights li:last-child { border-bottom: 0; }
+.highlights .was { flex: none; width: 112px; color: var(--leise); }
+
+.jahres-liste { margin: 0; padding: 0; list-style: none; }
+.jahres-liste button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 0;
+  padding: 8px 0;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--rand);
+  border-radius: 0;
+  text-align: left;
+}
+.jahres-liste li:last-child button { border-bottom: 0; }
+.jahres-liste .lese-text { gap: 2px; }
+.jahres-liste small { color: var(--leise); font-size: 12px; }
+
+/* ---------- Dialoge ---------- */
+
+dialog {
+  width: min(560px, calc(100vw - 24px));
+  max-height: calc(100vh - 32px);
+  padding: 16px;
+  background: var(--flaeche);
+  border: 1px solid var(--rand);
+  border-radius: 12px;
+  color: var(--text);
+}
+
+dialog::backdrop { background: rgba(0, 0, 0, .5); }
+dialog h2 { margin: 0 0 12px; font-size: 20px; }
+dialog h3 { margin: 18px 0 8px; font-size: 16px; }
+dialog hr { margin: 16px 0; border: 0; border-top: 1px solid var(--rand); }
+
+.knoepfe { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 16px; }
+
+/* Knöpfe langer Dialoge bleiben beim Scrollen sichtbar. */
+#dlg-buch .knoepfe, #dlg-hinzufuegen .knoepfe {
+  position: sticky;
+  bottom: -16px;
+  margin: 16px -16px -16px;
+  padding: 12px 16px;
+  background: var(--flaeche);
+  border-top: 1px solid var(--rand);
+}
+
+/* Hinzufügen */
+.suchzeile { display: flex; gap: 8px; }
+.suchzeile input { flex: 1; min-width: 0; }
+
+.scanner { position: relative; margin-top: 8px; overflow: hidden; background: #000000; border-radius: 10px; }
+.scanner video { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+.scan-rahmen { position: absolute; top: 22%; left: 12%; width: 76%; height: 36%; border: 3px solid rgba(255, 255, 255, .9); border-radius: 10px; box-shadow: 0 0 0 999px rgba(0, 0, 0, .35); }
+.scan-hinweis { margin: 0; padding: 8px 12px; color: #ffffff; font-size: 13px; }
+.scanner button { margin: 0 12px 12px; }
+
+.treffer-info { margin: 14px 0 6px; color: var(--leise); font-size: 14px; }
+
+.treffer {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rand);
+}
+
+.treffer:last-child { border-bottom: 0; }
+.treffer .lese-text small { color: var(--leise); font-size: 12px; }
+.treffer-knoepfe { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.treffer-knoepfe button { min-height: 36px; padding: 4px 10px; font-size: 13px; }
+.schon-da { color: var(--gut); font-size: 13px; font-weight: 600; }
+
+.lade { padding: 24px 0; color: var(--leise); text-align: center; }
+
+/* Detail */
+.detail-kopf { display: flex; gap: 14px; margin-bottom: 14px; }
+.detail-kopf h2 { margin: 0 0 4px; font-size: 19px; line-height: 1.25; }
+.detail-kopf .buch-autor { font-size: 15px; }
+.detail-meta { margin-top: 8px; color: var(--leise); font-size: 13px; }
+
+.status-wahl { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+.status-wahl button { min-height: 40px; padding: 6px 8px; font-size: 14px; }
+.status-wahl .aktiv { background: var(--marke); border-color: var(--marke); color: var(--auf-marke); font-weight: 600; }
+
+.fortschritt-block { margin-top: 12px; }
+.fortschritt-block .lese-stand { margin-top: 0; }
+.fortschritt-block button { width: 100%; margin-top: 10px; }
+
+.daten { margin-top: 12px; }
+
+.zitat {
+  position: relative;
+  margin: 0 0 8px;
+  padding: 8px 40px 8px 12px;
+  background: var(--grund);
+  border-left: 3px solid var(--marke);
+  border-radius: 0 8px 8px 0;
+  font-size: 15px;
+}
+
+.zitat-text { white-space: pre-wrap; }
+.zitat small { display: block; margin-top: 4px; color: var(--leise); font-size: 12px; }
+.zitat button { position: absolute; top: 2px; right: 2px; width: 36px; min-height: 36px; padding: 0; background: none; border: 0; color: var(--leise); font-size: 20px; }
+.zitat-neu .zeile { grid-template-columns: 96px 1fr; align-items: end; }
+.zitat-neu .zeile label { margin-bottom: 0; }
+
+.beschreibung summary { cursor: pointer; font-weight: 600; padding: 8px 0; }
+.beschreibung p { margin: 4px 0 0; color: var(--leise); font-size: 14px; white-space: pre-wrap; }
+
+.format-marke {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  z-index: 1;
+  padding: 1px 3px;
+  background: rgba(0, 0, 0, .55);
+  border-radius: 4px;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.cover.klein .format-marke { font-size: 9px; }
+
+.link-knopf {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 6px 12px;
+  border: 1px solid var(--rand);
+  border-radius: 8px;
+  color: var(--marke);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* Cover im Formular */
+.cover-wahl { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; }
+#cover-vorschau:empty { display: none; }
+.cover-felder { flex: 1; min-width: 0; }
+.cover-felder input {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+  background: var(--flaeche);
+  border: 1px solid var(--rand);
+  border-radius: 8px;
+  font-size: 16px;
+}
+.cover-felder .hinweis { margin: 6px 0 0; }
+.cover-knoepfe { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.cover-knoepfe button { min-height: 40px; padding: 6px 10px; font-size: 14px; }
+
+/* Fortschritt eintragen */
+.seiten-eingabe { display: grid; grid-template-columns: 64px 1fr 64px; gap: 8px; align-items: end; }
+.seiten-eingabe label { margin: 0; }
+.seiten-eingabe input { font-size: 22px; text-align: center; }
+.seiten-eingabe button { min-height: 48px; padding: 0; }
+.schritte { display: flex; gap: 8px; margin: 8px 0 12px; }
+.schritte button { flex: 1; }

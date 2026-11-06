@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#2f6b4f" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1f4a35" media="(prefers-color-scheme: dark)">
+  <title>Meine Bücher</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="kopf">
+    <h1 id="titel">Lese ich</h1>
+    <button id="einstellungen" class="kopf-knopf" type="button" aria-label="Einstellungen">⚙</button>
+  </header>
+
+  <p id="status" class="status" role="status" hidden></p>
+
+  <main>
+    <section id="ansicht-lese" class="ansicht">
+      <button id="ziel-kurz" class="ziel-kurz" type="button" data-ansicht="statistik"></button>
+      <div id="lese-liste"></div>
+      <div id="naechste"></div>
+    </section>
+
+    <section id="ansicht-bibliothek" class="ansicht" hidden>
+      <input id="suche" type="search" placeholder="In deinen Büchern suchen …" aria-label="In deinen Büchern suchen" autocomplete="off">
+      <div id="filter" class="chips"></div>
+      <div class="sortierung">
+        <span id="bib-anzahl"></span>
+        <label>Sortieren
+          <select id="sortierung">
+            <option value="neu">Zuletzt hinzugefügt</option>
+            <option value="beendet">Zuletzt gelesen</option>
+            <option value="titel">Titel</option>
+            <option value="autor">Autor</option>
+            <option value="bewertung">Bewertung</option>
+          </select>
+        </label>
+      </div>
+      <div id="bib-liste"></div>
+    </section>
+
+    <section id="ansicht-statistik" class="ansicht" hidden>
+      <div class="monat-kopf">
+        <button id="jahr-zurueck" class="pfeil" type="button" aria-label="Vorheriges Jahr">‹</button>
+        <h2 id="jahr-name"></h2>
+        <button id="jahr-vor" class="pfeil" type="button" aria-label="Nächstes Jahr">›</button>
+      </div>
+      <div id="statistik"></div>
+    </section>
+  </main>
+
+  <button id="neu" class="neu-knopf" type="button" aria-label="Buch hinzufügen">+</button>
+
+  <nav class="navi">
+    <button type="button" data-ansicht="lese" class="aktiv"><span aria-hidden="true">📖</span>Lese ich</button>
+    <button type="button" data-ansicht="bibliothek"><span aria-hidden="true">📚</span>Bibliothek</button>
+    <button type="button" data-ansicht="statistik"><span aria-hidden="true">📊</span>Statistik</button>
+  </nav>
+
+  <!-- Buch suchen, scannen oder von Hand eintragen -->
+  <dialog id="dlg-hinzufuegen">
+    <h2>Buch hinzufügen</h2>
+    <form id="form-suche" class="suchzeile" role="search">
+      <input name="q" type="search" placeholder="Titel, Autor oder ISBN" aria-label="Titel, Autor oder ISBN" autocomplete="off" enterkeyhint="search">
+      <button class="haupt" type="submit">Suchen</button>
+    </form>
+    <button id="scannen" class="breit" type="button" hidden>📷 Barcode scannen</button>
+    <div id="scanner" class="scanner" hidden>
+      <video id="video" playsinline muted></video>
+      <span class="scan-rahmen" aria-hidden="true"></span>
+      <p class="scan-hinweis">Halte den Strichcode auf der Rückseite des Buchs in den Rahmen.</p>
+      <button id="scan-stopp" type="button">Abbrechen</button>
+    </div>
+    <div id="treffer" aria-live="polite"></div>
+    <div class="knoepfe">
+      <button id="manuell" type="button">Von Hand eintragen</button>
+      <span class="platz"></span>
+      <button class="haupt" type="button" data-schliessen>Schließen</button>
+    </div>
+  </dialog>
+
+  <!-- Detailansicht eines Buchs -->
+  <dialog id="dlg-buch">
+    <div id="buch-detail"></div>
+    <div class="knoepfe">
+      <button id="buch-loeschen" class="gefahr symbol-knopf" type="button" aria-label="Buch löschen" title="Buch löschen">🗑</button>
+      <span class="platz"></span>
+      <button id="buch-bearbeiten" type="button">Bearbeiten</button>
+      <button class="haupt" type="button" data-schliessen>Schließen</button>
+    </div>
+  </dialog>
+
+  <!-- Buchdaten anlegen oder bearbeiten -->
+  <dialog id="dlg-formular">
+    <form id="form-buch" novalidate>
+      <h2 id="formular-titel">Buch eintragen</h2>
+      <p id="formular-hinweis" class="hinweis" hidden></p>
+      <button id="formular-suchen" class="breit" type="button" hidden>🔍 Stattdessen in Buchdatenbanken suchen</button>
+      <label>Titel * <input name="titel" maxlength="200" required autocomplete="off"></label>
+      <label>Autor <input name="autor" maxlength="200" autocomplete="off"></label>
+      <div class="zeile">
+        <label>Format
+          <select name="format">
+            <option value="buch">📖 Buch</option>
+            <option value="ebook">📱 E-Book</option>
+            <option value="hoerbuch">🎧 Hörbuch</option>
+          </select>
+        </label>
+        <label>Seiten <input name="seiten" type="number" inputmode="numeric" min="0" max="20000"></label>
+      </div>
+      <div class="zeile">
+        <label>Verlag <input name="verlag" maxlength="120" autocomplete="off"></label>
+        <label>Erscheinungsjahr <input name="jahr" type="number" inputmode="numeric" min="0" max="2100"></label>
+      </div>
+      <div class="zeile">
+        <label>ISBN <input name="isbn" inputmode="numeric" maxlength="17" autocomplete="off"></label>
+        <label>ASIN (Amazon) <input name="asin" maxlength="10" autocomplete="off" autocapitalize="characters" placeholder="B0…"></label>
+      </div>
+      <label>Link, z. B. zu Amazon <input name="link" type="url" maxlength="500" autocomplete="off" placeholder="https://…"></label>
+      <p class="feld-titel">Cover</p>
+      <div class="cover-wahl">
+        <div id="cover-vorschau"></div>
+        <div class="cover-felder">
+          <input name="cover" type="url" maxlength="500" autocomplete="off" placeholder="Bildadresse https://…" aria-label="Cover-Bildadresse">
+          <p id="cover-foto-hinweis" class="hinweis" hidden>Eigenes Foto</p>
+          <div class="cover-knoepfe">
+            <button id="cover-foto" type="button">📷 Foto oder Screenshot</button>
+            <button id="cover-entfernen" class="gefahr" type="button">Entfernen</button>
+          </div>
+        </div>
+      </div>
+      <input id="cover-datei" type="file" accept="image/*" hidden>
+      <label id="formular-status">Status
+        <select name="status">
+          <option value="wunsch">Will ich lesen</option>
+          <option value="lese">Lese ich gerade</option>
+          <option value="gelesen">Gelesen</option>
+        </select>
+      </label>
+      <p class="fehler" hidden></p>
+      <div class="knoepfe">
+        <span class="platz"></span>
+        <button type="button" data-schliessen>Abbrechen</button>
+        <button class="haupt" type="submit">Speichern</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Seite eintragen -->
+  <dialog id="dlg-fortschritt">
+    <form id="form-fortschritt" novalidate>
+      <h2>Wie weit bist du?</h2>
+      <p id="fortschritt-buch" class="hinweis"></p>
+      <div class="seiten-eingabe">
+        <button type="button" data-schritt="-10">−10</button>
+        <label>Seite <input name="seite" type="number" inputmode="numeric" min="0" max="20000"></label>
+        <button type="button" data-schritt="10">+10</button>
+      </div>
+      <div class="schritte">
+        <button type="button" data-schritt="1">+1</button>
+        <button type="button" data-schritt="25">+25</button>
+        <button type="button" data-schritt="50">+50</button>
+      </div>
+      <label id="fortschritt-gesamt">Seiten insgesamt <input name="seiten" type="number" inputmode="numeric" min="0" max="20000"></label>
+      <div class="knoepfe">
+        <button id="fortschritt-fertig" type="button">✓ Fertig gelesen</button>
+        <span class="platz"></span>
+        <button type="button" data-schliessen>Abbrechen</button>
+        <button class="haupt" type="submit">Speichern</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Buch beendet: Bewertung und Datum -->
+  <dialog id="dlg-fertig">
+    <form id="form-fertig" novalidate>
+      <h2>🎉 Fertig gelesen!</h2>
+      <p id="fertig-buch" class="hinweis"></p>
+      <p class="feld-titel">Wie hat es dir gefallen?</p>
+      <div id="fertig-sterne"></div>
+      <label>Beendet am <input name="ende" type="date"></label>
+      <div class="knoepfe">
+        <span class="platz"></span>
+        <button type="button" data-schliessen>Abbrechen</button>
+        <button class="haupt" type="submit">Speichern</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-einstellungen">
+    <h2>Einstellungen</h2>
+    <label>Leseziel pro Jahr (Bücher) <input id="jahresziel" type="number" inputmode="numeric" min="0" max="999"></label>
+    <hr>
+    <h3>Sicherung</h3>
+    <p class="hinweis">Deine Bücher sind nur auf diesem Handy gespeichert. Mit einer Sicherungsdatei kannst du sie aufbewahren oder auf ein anderes Handy übertragen.</p>
+    <div class="knoepfe">
+      <button id="exportieren" type="button">Daten exportieren</button>
+      <button id="importieren" type="button">Daten importieren</button>
+      <button id="csv" type="button">Als Tabelle (CSV)</button>
+    </div>
+    <input id="import-datei" type="file" accept=".json,application/json" hidden>
+    <hr>
+    <p class="hinweis">Buchdaten und Cover stammen aus Google Books und Open Library.</p>
+    <div class="knoepfe">
+      <span class="platz"></span>
+      <button class="haupt" type="button" data-schliessen>Schließen</button>
+    </div>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
