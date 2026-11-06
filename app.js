@@ -1624,5 +1624,22 @@ pruefeGeteiltes();
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  // Ist schon eine ältere Version aktiv, wird nach einem Update einmal neu geladen.
+  const hatteVersion = Boolean(navigator.serviceWorker.controller);
+  let neuGeladen = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hatteVersion || neuGeladen) return;
+    if (document.querySelector('dialog[open]')) {
+      zeigeStatus('Neue Version geladen. Sie ist beim nächsten Öffnen der App aktiv.');
+      return;
+    }
+    neuGeladen = true;
+    location.reload();
+  });
+  navigator.serviceWorker.register('sw.js').then((anmeldung) => {
+    // Die installierte App bleibt oft im Hintergrund offen; beim Zurückholen nach Updates schauen.
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') anmeldung.update().catch(() => {});
+    });
+  }).catch(() => {});
 }

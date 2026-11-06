@@ -1,7 +1,7 @@
 'use strict';
 
 // Bei jeder Änderung an den App-Dateien erhöhen, damit die Handys die neue Version laden.
-const CACHE = 'buecher-v4';
+const CACHE = 'buecher-v5';
 // Cover (Google, Open Library, Amazon und eingefügte Bildadressen) bleiben über App-Updates hinweg erhalten.
 const COVER_CACHE = 'buecher-cover';
 const DATEIEN = [
@@ -23,7 +23,10 @@ function kuerzeCoverCache(cache) {
 }
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(DATEIEN)).then(() => self.skipWaiting()));
+  // cache: 'reload' umgeht den Browser-Cache (GitHub Pages erlaubt 10 Minuten), sonst landet die alte Version im neuen Cache.
+  e.waitUntil(caches.open(CACHE)
+    .then((c) => c.addAll(DATEIEN.map((datei) => new Request(datei, { cache: 'reload' }))))
+    .then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => {
@@ -54,8 +57,9 @@ self.addEventListener('fetch', (e) => {
   if (url.origin !== location.origin) return;
 
   // Erst Netz, damit Änderungen sofort ankommen; ohne Verbindung aus dem Cache.
+  // no-cache: beim Server nachfragen statt bis zu 10 Minuten die alte Datei aus dem Browser-Cache zu nehmen.
   e.respondWith(
-    fetch(e.request)
+    fetch(e.request.url, { cache: 'no-cache', credentials: 'same-origin' })
       .then((antwort) => {
         if (antwort.ok) {
           const kopie = antwort.clone();
